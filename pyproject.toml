@@ -1,0 +1,32 @@
+[project]
+name = "cpic-brasil"
+version = "3.0.0"
+description = "Detecção de Sistemas de Irrigação por Pivô Central (SIPC) via Deep Learning, reproduzindo Liu et al. (2023) e avaliando generalização geográfica na região da AMAJA/RS"
+requires-python = ">=3.10,<3.13" # tensorflow==2.20.0 não tem wheel para Python 3.13+
+readme = "README.md"
+
+# Este projeto não é instalado via pip: os scripts em src/ são executados a partir da
+# raiz do repositório (`python src/main.py ...`, `python src/data/amaja.py ...`), o
+# mesmo modelo usado no driver do Colab (notebooks/cpic_training.py). Este arquivo
+# existe para centralizar a configuração de ferramentas (pytest, ruff), não para
+# empacotar.
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+line-length = 120
+target-version = "py310"
+
+[tool.ruff.lint]
+# E/F: pycodestyle + pyflakes (erros reais e imports/variáveis não usados). I: import
+# sorting (isort). Conjunto propositalmente enxuto — sem regras de estilo opinativas
+# (docstrings, complexidade, etc.) que não se aplicam ao código científico deste repo.
+select = ["E", "F", "I"]
+
+[tool.ruff.lint.per-file-ignores]
+# Os testes de módulos com TensorFlow usam pytest.importorskip('tensorflow') antes de
+# importar de src/ (para pular no lugar de falhar quando TF não está instalado) — isso
+# exige imports fora do topo do arquivo por design.
+"tests/*" = ["E402"]

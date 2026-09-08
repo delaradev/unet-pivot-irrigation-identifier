@@ -1,0 +1,23 @@
+project:
+  name: CPIC_Brazil_Article_Reproducible
+  version: 3.0.0
+  seed: 42
+
+# Config para validar a generalização geográfica na região da AMAJA.
+# Só precisa de data.balanced_path (aponta para os tiles gerados por src/data/tiles.py
+# e revisados em src/data/review_tiles.py) e training.loss (alpha/beta do modelo
+# treinado, usados para reconstruir a loss como custom_object ao carregar o .keras).
+#
+# Uso: python src/main.py --mode validate --config config/config_amaja.yaml \
+#        --model runs/<run>/best_model.keras
+data:
+  balanced_path: data/dataset_amaja_final # valid_images/ + valid_masks/, após tiles.py + review_tiles.py (validação humana)
+
+# Sem seção `model:`: --mode predict/export/validate carregam arquitetura e pesos
+# direto do .keras salvo, nunca a partir do config.
+
+training:
+  loss:
+    name: tversky
+    alpha: 0.7
+    beta: 0.3

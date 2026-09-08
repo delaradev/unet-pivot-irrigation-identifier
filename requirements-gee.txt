@@ -1,0 +1,8 @@
+# Dependências extras, usadas somente por src/data/gee_export_amaja.py — a etapa de
+# exportação da composição Landsat da AMAJA, que roda no Colab com o Earth Engine
+# autenticado (ee.Authenticate()). Não é necessária para treinar, prever ou validar
+# o modelo com o dataset de Liu et al.; instale só se for gerar a base da AMAJA.
+#
+# Uso: pip install -r requirements.txt -r requirements-gee.txt
+earthengine-api>=1.0.0
+geemap>=0.32.0

@@ -1,0 +1,51 @@
+project:
+  name: CPIC_Brazil_Article_Reproducible
+  version: 3.0.0
+  seed: 42
+
+data:
+  # dataset_path é o dataset já extraído do Zenodo (train_images/train_masks/
+  # valid_images/valid_masks — ver data_utils.extract_zenodo_dataset). Parâmetros de
+  # tiling (tile_size/overlap) são flags de CLI de src/data/tiles.py, não chaves aqui.
+  dataset_path: data/dataset
+  balanced_path: data/dataset_balanced
+  randommix_path: data/dataset_balanced_randommix
+  min_fg_ratio: 0.003 # não especificado no artigo nem no TCC; limiar de engenharia
+  desired_pos_ratio: 0.7 # não especificado no artigo nem no TCC; sem relação com o split 70/30 treino/teste (esse vem do dataset do Zenodo, já particionado por Liu et al.)
+  max_train_samples: 20000
+  internal_val_fraction: 0.1 # fração do treino separada para validação interna (early stopping/checkpoint); valid_images/valid_masks é o conjunto de teste, reservado
+  excluded_grid_ids: [] # células de grade do dataset do Liu (ex.: "I-3") com sobreposição geográfica confirmada com a AMAJA — ver src/data/geo_leakage_check.py
+
+model:
+  img_size: 512
+  unet_base_filters: 64 # testado entre 32/64/128; coincide com a progressão de filtros de Liu et al. (Fig. 7: 64,128,256,512,1024)
+  input_channels: 3
+  output_channels: 1
+
+training:
+  # batch_size/epochs/learning_rate/optimizer/early_stopping_patience: melhor
+  # combinação encontrada em busca de hiperparâmetros própria. Liu et al. não
+  # especifica batch size nem early stopping; lr=1e-4/RMSprop/epochs=100 coincidem
+  # com o artigo por resultado da busca, não por cópia direta.
+  batch_size: 16 # testado entre 8/16/32; treino em GPU A100 80GB
+  epochs: 100 # testado entre 25/50/75/100; teto de épocas, com early stopping
+  learning_rate: 0.0001 # testado entre 1e-3/1e-4/5e-5
+  optimizer: rmsprop # testado junto com Adam
+  early_stopping_patience: 15
+  reduce_lr_patience: 5 # não especificado no artigo nem no TCC; limiar de engenharia
+  loss:
+    name: tversky # tversky | dice | bce — as 3 funções de perda suportadas
+    # alpha/beta: nem o artigo (a comparação de hiperparâmetros de loss está na Tabela
+    # S1 suplementar, não publicada no PDF principal) nem o TCC especificam esses
+    # pesos. Em losses.py, alpha pondera FP e beta pondera FN (tversky = tp / (tp +
+    # alpha*fp + beta*fn)); 0.7/0.3 penaliza mais falsos positivos (favorece precisão
+    # sobre recall) e é o valor de engenharia adotado.
+    alpha: 0.7
+    beta: 0.3
+  randommix: true # Algorithm 1 de Liu et al., Seção 3.2
+  randommix_prob: 1.0
+
+gpu:
+  memory_growth: true
+  mixed_precision: true # ~2x mais rápido na A100
+  memory_limit_mb: 81920 # ignorado enquanto memory_growth=true (mutuamente exclusivos na mesma GPU)
